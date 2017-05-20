@@ -12,7 +12,8 @@ LIB_DIR = ../lib
 all: $(LIB_DIR)/libCVFont.a
 
 SRC = \
-CVFont.cpp
+CVFont.cpp \
+CLFont.cpp \
 
 OBJS = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SRC))
 

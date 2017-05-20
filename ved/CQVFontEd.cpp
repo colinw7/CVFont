@@ -59,35 +59,47 @@ createMenus()
   quitItem->setShortcut("Ctrl+Q");
   quitItem->setStatusTip("Quit the application");
 
-  quitItem->connect(SIGNAL(triggered()), this, SLOT(close()));
+  quitItem->connect(this, SLOT(close()));
 
   CQMenuItem *printItem = new CQMenuItem(fileMenu, "&Print");
 
   printItem->setShortcut("Ctrl+P");
   printItem->setStatusTip("Print the current character");
-  printItem->connect(SIGNAL(triggered()), this, SLOT(print()));
+  printItem->connect(this, SLOT(print()));
+
+  CQMenuItem *printAllItem = new CQMenuItem(fileMenu, "&Print All");
+
+  printAllItem->connect(this, SLOT(printAll()));
 
   CQMenuItem *helpItem = new CQMenuItem(fileMenu, "&Help");
 
   helpItem->setShortcut("Ctrl+H");
   helpItem->setStatusTip("Help");
 
-  //helpItem->connect(SIGNAL(triggered()), this, SLOT(help()));
+  //helpItem->connect(this, SLOT(help()));
+
+  //---
 
   CQMenu *viewMenu = new CQMenu(this, "&View");
 
   CQMenuItem *previewItem = new CQMenuItem(viewMenu, "&Preview");
 
   previewItem->setStatusTip("Preview font with example text");
-  previewItem->connect(SIGNAL(triggered()), this, SLOT(preview()));
+  previewItem->connect(this, SLOT(preview()));
 
   CQMenuItem *increaseLineWidthItem = new CQMenuItem(viewMenu, "&Increase Line Width");
 
-  increaseLineWidthItem->connect(SIGNAL(triggered()), this, SLOT(increaseLineWidth()));
+  increaseLineWidthItem->connect(this, SLOT(increaseLineWidth()));
 
-  CQMenuItem *decreaseLineWidthItem = new CQMenuItem(viewMenu, "&Increase Line Width");
+  CQMenuItem *decreaseLineWidthItem = new CQMenuItem(viewMenu, "&Decrease Line Width");
 
-  decreaseLineWidthItem->connect(SIGNAL(triggered()), this, SLOT(decreaseLineWidth()));
+  decreaseLineWidthItem->connect(this, SLOT(decreaseLineWidth()));
+
+  CQMenuItem *numberItem = new CQMenuItem(viewMenu, "Number", CQMenuItem::CHECKABLE);
+
+  numberItem->connect(this, SLOT(numberParts(bool)));
+
+  //---
 
   CQMenu *editMenu = new CQMenu(this, "&Edit");
 
@@ -96,8 +108,8 @@ createMenus()
   CQMenuItem *lineItem  = new CQMenuItem(editMenu, "&Line" , CQMenuItem::CHECKED);
   CQMenuItem *curveItem = new CQMenuItem(editMenu, "&Curve", CQMenuItem::CHECKABLE);
 
-  lineItem ->connect(SIGNAL(triggered()), this, SLOT(lineMode()));
-  curveItem->connect(SIGNAL(triggered()), this, SLOT(curveMode()));
+  lineItem ->connect(this, SLOT(lineMode()));
+  curveItem->connect(this, SLOT(curveMode()));
 
   editMenu->endGroup();
 
@@ -109,9 +121,9 @@ createMenus()
 
   editMenu->endGroup();
 
-  moveItem  ->connect(SIGNAL(triggered()), this, SLOT(moveState()));
-  addItem   ->connect(SIGNAL(triggered()), this, SLOT(addState()));
-  deleteItem->connect(SIGNAL(triggered()), this, SLOT(deleteState()));
+  moveItem  ->connect(this, SLOT(moveState()));
+  addItem   ->connect(this, SLOT(addState()));
+  deleteItem->connect(this, SLOT(deleteState()));
 }
 
 void
@@ -123,13 +135,43 @@ print()
   if (! file.open(CFile::Mode::WRITE))
     return;
 
+  printChar(file, fontData_.c(), fontData_.fontDef());
+
+  file.close();
+}
+
+void
+Application::
+printAll()
+{
+  CFile file("/tmp/CVFontDef.h");
+
+  if (! file.open(CFile::Mode::WRITE))
+    return;
+
+  for (char c = ' '; c <= '~'; ++c) {
+    const CVFontDef &fontDef = CVFont::getFontDef(c);
+
+    printChar(file, c, fontDef);
+  }
+
+  file.close();
+}
+
+void
+Application::
+printChar(CFile &file, char c, const CVFontDef &fontDef)
+{
+  int charNum = c - ' ';
+
+  //---
+
   bool lineFound = false;
 
-  for (const auto &shape : fontData_.fontDef().shapes()) {
+  for (const auto &shape : fontDef.shapes()) {
     if (shape->type() == CVFontShape::Type::LINE) {
       if (! lineFound) {
-        file.writef("static CVFontLine lines%02d[] = { /* %c */\n",
-                    fontData_.charNum(), fontData_.c());
+        file.writef("static CVFontLine lines%02d[] = { /* %c */\n", charNum, c);
 
         lineFound = true;
       }
@@ -148,11 +190,10 @@ print()
 
   bool curveFound = false;
 
-  for (const auto &shape : fontData_.fontDef().shapes()) {
+  for (const auto &shape : fontDef.shapes()) {
     if (shape->type() == CVFontShape::Type::CURVE) {
       if (! curveFound) {
-        file.writef("static CVFontCurve  curves%02d[] = { /* %c */\n",
-                    fontData_.charNum(), fontData_.c());
+        file.writef("static CVFontCurve  curves%02d[] = { /* %c */\n", charNum, c);
 
         curveFound = true;
       }
@@ -170,10 +211,10 @@ print()
 
   //---
 
-  file.writef("/* %c */\n", fontData_.c());
-  file.writef("static std::string shapes%02d = \"\\\n", fontData_.charNum());
+  file.writef("/* %c */\n", c);
+  file.writef("static std::string shapes%02d = \"\\\n", charNum);
 
-  for (const auto &shape : fontData_.fontDef().shapes()) {
+  for (const auto &shape : fontDef.shapes()) {
     if      (shape->type() == CVFontShape::Type::LINE) {
       const CVFontLine *line = dynamic_cast<const CVFontLine *>(shape);
 
@@ -190,10 +231,6 @@ print()
   }
 
   file.write("\";\n");
-
-  //---
-
-  file.close();
 }
 
 void
@@ -208,11 +245,11 @@ draw(QPainter *painter)
 
   painter->setPen(pen);
 
-  double x1 =  0.0;
-  double x2 =  CVFont::charWidth;
-  double y1 =  -CVFont::charDescent;
-  double y2 =  0.0;
-  double y3 =  y2 + CVFont::charAscent;
+  double x1 = 0.0;
+  double x2 = CVFont::charWidth;
+  double y1 = -CVFont::charDescent;
+  double y2 = 0.0;
+  double y3 = y2 + CVFont::charAscent;
 
   painter->drawLine(QPointF(x1, y1), QPointF(x2, y1));
   painter->drawLine(QPointF(x2, y1), QPointF(x2, y3));
@@ -240,7 +277,7 @@ draw(QPainter *painter)
 
   painter->drawLine(QPointF(x1, y2), QPointF(x2, y2));
 
-  drawChar(painter, CPoint2D(0, 0), fontData_.fontDef());
+  drawChar(painter, CPoint2D(0, 0), fontData_.fontDef(), numberParts_);
 
   drawPreviewPoint(painter);
 
@@ -275,7 +312,7 @@ drawText(QPainter *painter, const CPoint2D &p, const std::string &str)
 
 void
 Application::
-drawChar(QPainter *painter, const CPoint2D &p, const CVFontDef &fontDef)
+drawChar(QPainter *painter, const CPoint2D &p, const CVFontDef &fontDef, bool numberParts)
 {
   QPen pen;
 
@@ -290,6 +327,8 @@ drawChar(QPainter *painter, const CPoint2D &p, const CVFontDef &fontDef)
   int firstXInd = -1;
   int firstYInd = -1;
 
+  int i = 0;
+
   QPainterPath path;
 
   for (const auto &shape : fontDef.shapes()) {
@@ -299,25 +338,38 @@ drawChar(QPainter *painter, const CPoint2D &p, const CVFontDef &fontDef)
       QPointF p1(p.x + line->start().x, p.y + line->start().y);
       QPointF p2(p.x + line->end  ().x, p.y + line->end  ().y);
 
-      int xind1 = line->startXInd();
-      int yind1 = line->startYInd();
-      int xind2 = line->endXInd();
-      int yind2 = line->endYInd();
+      if (! numberParts) {
+        int xind1 = line->startXInd();
+        int yind1 = line->startYInd();
+        int xind2 = line->endXInd();
+        int yind2 = line->endYInd();
 
-      if (xind1 != lastXInd || yind1 != lastYInd) {
-        if (xind2 == firstXInd && yind2 == firstYInd)
-          path.closeSubpath();
+        if (xind1 != lastXInd || yind1 != lastYInd) {
+          if (xind2 == firstXInd && yind2 == firstYInd)
+            path.closeSubpath();
 
-        firstXInd = xind1;
-        firstYInd = yind1;
+          firstXInd = xind1;
+          firstYInd = yind1;
 
-        path.moveTo(p1);
+          path.moveTo(p1);
+
+          //drawCrossPoint(painter, p1, Qt::red);
+        }
+
+        path.lineTo(p2);
+
+        lastXInd = xind2;
+        lastYInd = yind2;
       }
+      else {
+        painter->drawLine(p1, p2);
 
-      path.lineTo(p2);
+        //---
 
-      lastXInd = xind2;
-      lastYInd = yind2;
+        QPointF pt = (p1 + p2)/2;
+
+        drawLabel(painter, pt, QString("%1").arg(i + 1), Qt::red);
+      }
     }
     else if (shape->type() == CVFontShape::Type::CURVE) {
       const CVFontCurve *curve = dynamic_cast<const CVFontCurve *>(shape);
@@ -327,29 +379,50 @@ drawChar(QPainter *painter, const CPoint2D &p, const CVFontDef &fontDef)
       QPointF p3(p.x + curve->p3().x, p.y + curve->p3().y);
       QPointF p4(p.x + curve->p4().x, p.y + curve->p4().y);
 
-      int xind1 = curve->p1XInd();
-      int yind1 = curve->p1YInd();
-      int xind2 = curve->p4XInd();
-      int yind2 = curve->p4YInd();
+      if (! numberParts) {
+        int xind1 = curve->p1XInd();
+        int yind1 = curve->p1YInd();
+        int xind2 = curve->p4XInd();
+        int yind2 = curve->p4YInd();
 
-      if (xind1 != lastXInd || yind1 != lastYInd) {
-        if (xind2 == firstXInd && yind2 == firstYInd)
-          path.closeSubpath();
+        if (xind1 != lastXInd || yind1 != lastYInd) {
+          if (xind2 == firstXInd && yind2 == firstYInd)
+            path.closeSubpath();
 
-        firstXInd = xind1;
-        firstYInd = yind1;
+          firstXInd = xind1;
+          firstYInd = yind1;
 
-        path.moveTo(p1);
+          path.moveTo(p1);
+
+          //drawCrossPoint(painter, p1, Qt::red);
+        }
+
+        path.cubicTo(p2, p3, p4);
+
+        lastXInd = xind2;
+        lastYInd = yind2;
       }
+      else {
+        QPainterPath path;
 
-      path.cubicTo(p2, p3, p4);
+        path.moveTo (p1);
+        path.cubicTo(p2, p3, p4);
 
-      lastXInd = xind2;
-      lastYInd = yind2;
+        painter->strokePath(path, pen);
+
+        //---
+
+        QPointF pt = (p1 + p2 + p3 + p4)/4;
+
+        drawLabel(painter, pt, QString("%1").arg(i + 1), Qt::cyan);
+      }
     }
+
+    ++i;
   }
 
-  painter->strokePath(path, pen);
+  if (! numberParts)
+    painter->strokePath(path, pen);
 }
 
 void
@@ -458,12 +531,49 @@ drawCrossPoint(QPainter *painter, const QPointF &p, const QColor &c)
 
 void
 Application::
+drawLabel(QPainter *painter, const QPointF &p, const QString &text, const QColor &c)
+{
+  painter->save();
+
+  painter->setWorldMatrixEnabled(false);
+
+  QPen pen;
+
+  pen.setColor(c);
+
+  painter->setPen(pen);
+
+  QFontMetrics fm(painter->font());
+
+  int tw = fm.width(text);
+  int th = fm.height();
+
+  CPoint2D px;
+
+  canvas_->range().windowToPixel(CQUtil::fromQPoint(p), px);
+
+  painter->fillRect(QRectF(px.x - tw/2, px.y - th/2, tw, th), Qt::black);
+
+  px.x -= tw/2;
+  px.y += (fm.ascent() - fm.descent())/2;
+
+  painter->drawText(CQUtil::toQPoint(px), text);
+
+  painter->setWorldMatrixEnabled(true);
+
+  painter->restore();
+}
+
+void
+Application::
 setKey(char c)
 {
   fontData_.setChar(c);
 
   selectedPoint_.reset();
   previewPoint_ .reset();
+
+  updateAll();
 }
 
 void
@@ -471,7 +581,7 @@ Application::
 mousePress(const CPoint2D &p)
 {
   mouseState_.pressed    = true;
-  mouseState_.pressPoint = snapPoint(p);
+  mouseState_.pressPoint = CVFont::snapPoint(p);
   mouseState_.moving     = false;
   mouseState_.escape     = false;
 
@@ -491,7 +601,7 @@ void
 Application::
 mouseMove(const CPoint2D &p)
 {
-  mouseState_.movePoint = snapPoint(p);
+  mouseState_.movePoint = CVFont::snapPoint(p);
 
   posLabel_->setText(QString("%1,%2").arg(mouseState_.movePoint.x).arg(mouseState_.movePoint.y));
 
@@ -518,7 +628,7 @@ Application::
 mouseRelease(const CPoint2D &p)
 {
   mouseState_.pressed      = false;
-  mouseState_.releasePoint = snapPoint(p);
+  mouseState_.releasePoint = CVFont::snapPoint(p);
   mouseState_.moving       = false;
   mouseState_.escape       = false;
 
@@ -526,36 +636,34 @@ mouseRelease(const CPoint2D &p)
     if (mouseState_.escape)
       return;
 
-    if (state_ == State::ADD) {
-      if      (mode_ == Mode::LINE) {
-        int ind = fontData_.fontDef().addLine(mouseState_.pressPoint, mouseState_.releasePoint);
+    if      (mode_ == Mode::LINE) {
+      int ind = fontData_.fontDef().addLine(mouseState_.pressPoint, mouseState_.releasePoint);
 
-        selectedPoint_ = PointData(CVFontShape::Type::LINE, ind, 0);
-      }
-      else if (mode_ == Mode::CURVE) {
-        double dx = (mouseState_.releasePoint.x - mouseState_.pressPoint.x)/3.0;
-        double dy = (mouseState_.releasePoint.y - mouseState_.pressPoint.y)/3.0;
-
-        CPoint2D p1, p2;
-
-        if (dx >= dy) {
-          p1 = CPoint2D(mouseState_.pressPoint.x + 1*dx, mouseState_.pressPoint.y + dy);
-          p2 = CPoint2D(mouseState_.pressPoint.x + 2*dx, mouseState_.pressPoint.y + dy);
-        }
-        else {
-          p1 = CPoint2D(mouseState_.pressPoint.x + dx, mouseState_.pressPoint.y + 1*dy);
-          p2 = CPoint2D(mouseState_.pressPoint.x + dx, mouseState_.pressPoint.y + 2*dy);
-        }
-
-        int ind = fontData_.fontDef().addCurve(mouseState_.pressPoint,
-                                               snapPoint(p1), snapPoint(p2),
-                                               mouseState_.releasePoint);
-
-        selectedPoint_ = PointData(CVFontShape::Type::CURVE, ind, 0);
-      }
-
-      updateFontDef();
+      selectedPoint_ = PointData(CVFontShape::Type::LINE, ind, 0);
     }
+    else if (mode_ == Mode::CURVE) {
+      double dx = (mouseState_.releasePoint.x - mouseState_.pressPoint.x)/3.0;
+      double dy = (mouseState_.releasePoint.y - mouseState_.pressPoint.y)/3.0;
+
+      CPoint2D p1, p2;
+
+      if (dx >= dy) {
+        p1 = CPoint2D(mouseState_.pressPoint.x + 1*dx, mouseState_.pressPoint.y + dy);
+        p2 = CPoint2D(mouseState_.pressPoint.x + 2*dx, mouseState_.pressPoint.y + dy);
+      }
+      else {
+        p1 = CPoint2D(mouseState_.pressPoint.x + dx, mouseState_.pressPoint.y + 1*dy);
+        p2 = CPoint2D(mouseState_.pressPoint.x + dx, mouseState_.pressPoint.y + 2*dy);
+      }
+
+      int ind = fontData_.fontDef().addCurve(mouseState_.pressPoint,
+                                             CVFont::snapPoint(p1), CVFont::snapPoint(p2),
+                                             mouseState_.releasePoint);
+
+      selectedPoint_ = PointData(CVFontShape::Type::CURVE, ind, 0);
+    }
+
+    updateFontDef();
 
     updateAll();
   }
@@ -584,6 +692,36 @@ escape()
 
 void
 Application::
+nextChar()
+{
+  int charNum = fontData_.charNum();
+
+  if (charNum < 94) {
+    ++charNum;
+
+    setKey(charNum + ' ');
+
+    updateAll();
+  }
+}
+
+void
+Application::
+prevChar()
+{
+  int charNum = fontData_.charNum();
+
+  if (charNum > 0) {
+    --charNum;
+
+    setKey(charNum + ' ');
+
+    updateAll();
+  }
+}
+
+void
+Application::
 moveTo(const CPoint2D &p)
 {
   move(MoveType::TO, p);
@@ -600,7 +738,7 @@ void
 Application::
 move(const MoveType &moveType, const CPoint2D &p)
 {
-  CPoint2D p1 = snapPoint(p);
+  CPoint2D p1 = CVFont::snapPoint(p);
 
   if (selectedPoint_.isSet()) {
     CVFontShape *shape = fontData_.fontDef_.shapes()[selectedPoint_.ind()];
@@ -670,13 +808,6 @@ deleteSelected()
 
     updateFontDef();
   }
-}
-
-CPoint2D
-Application::
-snapPoint(const CPoint2D &p) const
-{
-  return CPoint2D(std::round(p.x*16.0)/16.0, std::round(p.y*16.0)/16.0);
 }
 
 PointData
@@ -810,6 +941,15 @@ decreaseLineWidth()
 
 void
 Application::
+numberParts(bool b)
+{
+  numberParts_ = b;
+
+  updateAll();
+}
+
+void
+Application::
 lineMode()
 {
   mode_ = Mode::LINE;
@@ -861,6 +1001,8 @@ updateAll()
 
   if (preview_)
     preview_->update();
+
+  updateState();
 }
 
 void
@@ -882,6 +1024,8 @@ updateState()
     str += "Line";
   else if (mode_ == Mode::CURVE)
     str += "Curve";
+
+  str += QString(" : Char %1 (#%2)").arg(fontData_.c()).arg(fontData_.charNum());
 
   stateLabel_->setText(str);
 }
@@ -940,6 +1084,10 @@ keyPressEvent(QKeyEvent *e)
     app_->moveBy(CPoint2D(0,  CVFont::delta));
   else if (e->key() == Qt::Key_Escape)
     app_->escape();
+  else if (e->key() == Qt::Key_PageDown)
+    app_->prevChar();
+  else if (e->key() == Qt::Key_PageUp)
+    app_->nextChar();
   else {
     QString text = e->text();
 
@@ -1014,7 +1162,7 @@ paintEvent(QPaintEvent *)
   y -= dy; app_->drawText(&painter, CPoint2D(0, y), "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
   y -= dy; app_->drawText(&painter, CPoint2D(0, y), "abcdefghijklmnopqrstuvwxyz");
   y -= dy; app_->drawText(&painter, CPoint2D(0, y), "1234567890!\"£$%^&*()-_=+\\|");
-  y -= dy; app_->drawText(&painter, CPoint2D(0, y), "'~[]{}:;@#<>?,./");
+  y -= dy; app_->drawText(&painter, CPoint2D(0, y), "`'~[]{}:;@#<>?,./");
 }
 
 void

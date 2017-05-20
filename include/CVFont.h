@@ -108,21 +108,22 @@ class CVFontDef {
   typedef std::vector<CVFontShape *> Shapes;
 
  public:
-  CVFontDef(double width=1, double ascender=1, double descender=0, int numLines=0,
-            CVFontLine *lines=nullptr, int numCurves=0, CVFontCurve *curves=nullptr,
-            const std::string &fontStr="") :
-   width_(width), ascender_(ascender), descender_(descender) {
-    if (fontStr == "") {
-      for (int i = 0; i < numLines; ++i)
-        shapes_.push_back(new CVFontLine(lines[i]));
+  CVFontDef() { }
 
-      for (int i = 0; i < numCurves; ++i)
-        shapes_.push_back(new CVFontCurve(curves[i]));
-    }
-    else {
-      if (! parse(fontStr))
-        assert(false);
-    }
+  CVFontDef(double width, double ascender, double descender,
+            int numLines, CVFontLine *lines, int numCurves, CVFontCurve *curves) :
+   width_(width), ascender_(ascender), descender_(descender) {
+    for (int i = 0; i < numLines; ++i)
+      shapes_.push_back(new CVFontLine(lines[i]));
+
+    for (int i = 0; i < numCurves; ++i)
+      shapes_.push_back(new CVFontCurve(curves[i]));
+  }
+
+  CVFontDef(double width, double ascender, double descender, const std::string &fontStr) :
+   width_(width), ascender_(ascender), descender_(descender) {
+    if (! parse(fontStr))
+      assert(false);
   }
 
  ~CVFontDef() {
@@ -146,11 +147,13 @@ class CVFontDef {
   bool parse(const std::string &str);
 
  private:
-  double width_;
-  double ascender_;
-  double descender_;
+  double width_     { 1.0 };
+  double ascender_  { 1.0 };
+  double descender_ { 0.0 };
   Shapes shapes_;
 };
+
+//---
 
 namespace CVFont {
   static const double charWidth   = 1.0;
@@ -166,19 +169,21 @@ namespace CVFont {
   const CVFontDef &getFontDef(char c);
   void setFontDef(char c, const CVFontDef &fontDef);
 
+  CPoint2D snapPoint(const CPoint2D &p);
+
   template<typename LINE_PROC, typename CURVE_PROC>
   void draw(const CVFontDef &font_def, const LINE_PROC &line_proc, const CURVE_PROC &curve_proc) {
     for (const auto &shape : font_def.shapes()) {
       if      (shape->type() == CVFontShape::Type::LINE) {
-        const CVFontLine &line = shape;
+        const CVFontLine *line = shape;
 
-        line_proc(line.start().x, line.start().y, line.end().x, line.end().y);
+        line_proc(line->start().x, line->start().y, line->end().x, line->end().y);
       }
       else if (shape->type() == CVFontShape::Type::CURVE) {
-        const CVFontCurve &curve = shape;
+        const CVFontCurve *curve = shape;
 
-        curve_proc(curve.p1().x, curve.p1().y, curve.p2().x, curve.p2().y,
-                   curve.p3().x, curve.p3().y, curve.p4().x, curve.p4().y);
+        curve_proc(curve->p1().x, curve->p1().y, curve->p2().x, curve->p2().y,
+                   curve->p3().x, curve->p3().y, curve->p4().x, curve->p4().y);
       }
     }
   }

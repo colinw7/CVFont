@@ -53,7 +53,10 @@ int
 CVFontDef::
 addLine(const CPoint2D &p1, const CPoint2D &p2)
 {
-  shapes_.push_back(new CVFontLine(p1, p2));
+  CPoint2D sp1 = CVFont::snapPoint(p1);
+  CPoint2D sp2 = CVFont::snapPoint(p2);
+
+  shapes_.push_back(new CVFontLine(sp1, sp2));
 
   return shapes_.size() - 1;
 }
@@ -62,7 +65,12 @@ int
 CVFontDef::
 addCurve(const CPoint2D &p1, const CPoint2D &p2, const CPoint2D &p3, const CPoint2D &p4)
 {
-  shapes_.push_back(new CVFontCurve(p1, p2, p3, p4));
+  CPoint2D sp1 = CVFont::snapPoint(p1);
+  CPoint2D sp2 = CVFont::snapPoint(p2);
+  CPoint2D sp3 = CVFont::snapPoint(p3);
+  CPoint2D sp4 = CVFont::snapPoint(p4);
+
+  shapes_.push_back(new CVFontCurve(sp1, sp2, sp3, sp4));
 
   return shapes_.size() - 1;
 }
@@ -111,4 +119,11 @@ setFontDef(char c, const CVFontDef &fontDef)
 {
   if (c >= ' ' && c <= '~')
     vfont_defs[c - ' '] = fontDef;
+}
+
+CPoint2D
+CVFont::
+snapPoint(const CPoint2D &p)
+{
+  return CPoint2D(std::round(p.x*16.0)/16.0, std::round(p.y*16.0)/16.0);
 }

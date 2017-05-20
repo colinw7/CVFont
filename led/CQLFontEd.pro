@@ -1,6 +1,6 @@
 TEMPLATE = app
 
-TARGET = CQFontEd
+TARGET = CQLFontEd
 
 DEPENDPATH += .
 
@@ -9,10 +9,10 @@ QT += widgets opengl
 QMAKE_CXXFLAGS += -std=c++11
 
 SOURCES += \
-CQVFontEd.cpp \
+CQLFontEd.cpp \
 
 HEADERS += \
-CQVFontEd.h \
+CQLFontEd.h \
 
 DESTDIR     = ../bin
 OBJECTS_DIR = ../obj

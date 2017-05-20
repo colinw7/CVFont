@@ -1,7 +1,7 @@
-#ifndef CQVFontEd_H
-#define CQVFontEd_H
+#ifndef CQLFontEd_H
+#define CQLFontEd_H
 
-#include <CVFont.h>
+#include <CLFont.h>
 #include <C3Bezier2D.h>
 #include <CQUtil.h>
 #include <CDisplayRange2D.h>
@@ -22,6 +22,8 @@ class Canvas : public QWidget {
 
  public:
   Canvas(Application *app, const std::string &name);
+
+  const CDisplayRange2D &range() const { return range_; }
 
  private:
   void paintEvent(QPaintEvent *);
@@ -61,16 +63,13 @@ class Preview : public QWidget {
 
 class PointData {
  public:
-  PointData(const CVFontShape::Type &type=CVFontShape::Type::NONE, int ind=-1, int subInd=-1) :
-   type_(type), ind_(ind), subInd_(subInd) {
+  PointData(int ind=-1, int subInd=-1) :
+   ind_(ind), subInd_(subInd) {
   }
 
-  bool isSet() const { return type_ != CVFontShape::Type::NONE; }
+  bool isSet() const { return ind_ >= 0; }
 
-  void reset() { type_ = CVFontShape::Type::NONE; ind_ = -1; subInd_ = -1; }
-
-  const CVFontShape::Type &type() const { return type_; }
-  void setType(const CVFontShape::Type &v) { type_ = v; }
+  void reset() { ind_ = -1; subInd_ = -1; }
 
   int ind() const { return ind_; }
   void setInd(int i) { ind_ = i; }
@@ -79,13 +78,12 @@ class PointData {
   void setSubInd(int i) { subInd_ = i; }
 
   bool operator==(const PointData &data) const {
-    return (type_ == data.type_ && ind_ == data.ind_ && subInd_ == data.subInd_);
+    return (ind_ == data.ind_ && subInd_ == data.subInd_);
   }
 
  private:
-  CVFontShape::Type type_   { CVFontShape::Type::NONE };
-  int               ind_    { -1 };
-  int               subInd_ { -1 };
+  int ind_    { -1 };
+  int subInd_ { -1 };
 };
 
 //---
@@ -94,12 +92,6 @@ class Application : public CQMainWindow {
   Q_OBJECT
 
  public:
-  enum class Mode {
-    NONE,
-    LINE,
-    CURVE
-  };
-
   enum class State {
     NONE,
     MOVE,
@@ -129,7 +121,7 @@ class Application : public CQMainWindow {
 
   void drawText(QPainter *painter, const CPoint2D &p, const std::string &str);
 
-  void drawChar(QPainter *painter, const CPoint2D &p, const CVFontDef &fontDef);
+  void drawChar(QPainter *painter, const CPoint2D &p, const CLFontDef &fontDef);
 
   void drawSelected(QPainter *painter);
 
@@ -149,14 +141,15 @@ class Application : public CQMainWindow {
 
   void escape();
 
+  void nextChar();
+  void prevChar();
+
   void moveTo(const CPoint2D &p);
   void moveBy(const CPoint2D &p);
 
   void move(const MoveType &moveType, const CPoint2D &p);
 
   void deleteSelected();
-
-  CPoint2D snapPoint(const CPoint2D &p) const;
 
   PointData nearestPoint(const CPoint2D &p) const;
 
@@ -168,14 +161,12 @@ class Application : public CQMainWindow {
 
  private slots:
   void print();
+  void printAll();
 
   void preview();
 
   void increaseLineWidth();
   void decreaseLineWidth();
-
-  void lineMode();
-  void curveMode();
 
   void moveState();
   void addState();
@@ -184,6 +175,9 @@ class Application : public CQMainWindow {
   void updateAll();
 
   void updateState();
+
+ private:
+  void printChar(CFile &file, char c, const CLFontDef &fontDef);
 
  private:
   struct MouseState {
@@ -203,22 +197,21 @@ class Application : public CQMainWindow {
 
     char c() const { return c_; }
 
-    const CVFontDef &fontDef() const { return fontDef_; }
-    CVFontDef &fontDef() { return fontDef_; }
+    const CLFontDef &fontDef() const { return fontDef_; }
+    CLFontDef &fontDef() { return fontDef_; }
 
     int charNum() const { return int(c_ - ' '); }
 
     void setChar(char c) {
       c_       = c;
-      fontDef_ = CVFont::getFontDef(c_);
+      fontDef_ = CLFont::getFontDef(c_);
     }
 
    public:
     char      c_ { '\0' };
-    CVFontDef fontDef_;
+    CLFontDef fontDef_;
   };
 
-  Mode       mode_ { Mode::LINE };
   State      state_ { State::MOVE };
   Canvas*    canvas_ { nullptr };
   QLabel*    stateLabel_ { nullptr };
