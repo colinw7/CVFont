@@ -14,7 +14,7 @@ CC            = gcc
 CXX           = g++
 DEFINES       = -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB
 CFLAGS        = -m64 -pipe -O2 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
-CXXFLAGS      = -m64 -pipe -std=c++11 -O2 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
+CXXFLAGS      = -m64 -pipe -std=c++14 -O2 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 INCPATH       = -I. -I../../CQUtil/include -I../../CVFont/include -I../../CImageLib/include -I../../CFont/include -I../../CFile/include -I../../CMath/include -I../../CStrUtil/include -I../../CUtil/include -I../../COS/include -I. -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtOpenGL -isystem /usr/include/x86_64-linux-gnu/qt5/QtWidgets -isystem /usr/include/x86_64-linux-gnu/qt5/QtGui -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -I. -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64
 QMAKE         = /usr/bin/qmake
 DEL_FILE      = rm -f

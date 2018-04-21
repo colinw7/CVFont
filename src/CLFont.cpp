@@ -1,6 +1,22 @@
 #include <CLFont.h>
 #include <CLFontDef.h>
 
+CLFontDef::
+CLFontDef(char c, double width, double ascender, double descender,
+          int numLines, CLFontLine *lines) :
+ c_(c), width_(width), ascender_(ascender), descender_(descender)
+{
+  for (int i = 0; i < numLines; ++i)
+    lines_.push_back(new CLFontLine(lines[i]));
+}
+
+CLFontDef::
+~CLFontDef()
+{
+  for (auto &line : lines_)
+    delete line;
+}
+
 int
 CLFontDef::
 addLine(const CPoint2D &p1, const CPoint2D &p2)

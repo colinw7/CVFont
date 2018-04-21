@@ -38,17 +38,12 @@ class CLFontDef {
   typedef std::vector<CLFontLine *> Lines;
 
  public:
-  CLFontDef(char c='\0', double width=1.0, double ascender=1.0, double descender=0.0,
-            int numLines=0, CLFontLine *lines=nullptr) :
-   c_(c), width_(width), ascender_(ascender), descender_(descender) {
-    for (int i = 0; i < numLines; ++i)
-      lines_.push_back(new CLFontLine(lines[i]));
-  }
+  CLFontDef() = default;
 
- ~CLFontDef() {
-    for (auto &line : lines_)
-      delete line;
-  }
+  CLFontDef(char c, double width, double ascender, double descender,
+            int numLines, CLFontLine *lines);
+
+ ~CLFontDef();
 
   const Lines lines() const { return lines_; }
 

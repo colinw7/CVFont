@@ -2,7 +2,6 @@
 #define CQLFontEd_H
 
 #include <CLFont.h>
-#include <C3Bezier2D.h>
 #include <CQUtil.h>
 #include <CDisplayRange2D.h>
 
@@ -37,7 +36,7 @@ class Canvas : public QWidget {
   void mouseReleaseEvent(QMouseEvent *e);
 
  private:
-  Application     *app_;
+  Application*     app_ { nullptr };
   CDisplayRange2D  range_;
 };
 
@@ -55,15 +54,17 @@ class Preview : public QWidget {
   void resizeEvent(QResizeEvent *);
 
  private:
-  Application     *app_;
-  CDisplayRange2D  range_;
+  Application*    app_ { nullptr };
+  CDisplayRange2D range_;
 };
 
 //---
 
 class PointData {
  public:
-  PointData(int ind=-1, int subInd=-1) :
+  PointData() = default;
+
+  PointData(int ind, int subInd) :
    ind_(ind), subInd_(subInd) {
   }
 
@@ -212,18 +213,18 @@ class Application : public CQMainWindow {
     CLFontDef fontDef_;
   };
 
-  State      state_ { State::MOVE };
-  Canvas*    canvas_ { nullptr };
+  State      state_      { State::MOVE };
+  Canvas*    canvas_     { nullptr };
   QLabel*    stateLabel_ { nullptr };
-  QLabel*    posLabel_ { nullptr };
-  Preview*   preview_ { nullptr };
+  QLabel*    posLabel_   { nullptr };
+  Preview*   preview_    { nullptr };
   FontData   fontData_;
   PointData  selectedPoint_;
   PointData  previewPoint_;
   CPoint2D   selectPoint_;
   MouseState mouseState_;
-  bool       moving_ { false };
-  int        lineWidth_ { 1 };
+  bool       moving_     { false };
+  int        lineWidth_  { 1 };
 };
 
 #endif
