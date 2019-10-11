@@ -113,6 +113,8 @@ class CVFontDef {
   CVFontDef(double width, double ascender, double descender,
             int numLines, CVFontLine *lines, int numCurves, CVFontCurve *curves) :
    width_(width), ascender_(ascender), descender_(descender) {
+    assert(width_ + ascender_ + descender_); // mark used
+
     for (int i = 0; i < numLines; ++i)
       shapes_.push_back(new CVFontLine(lines[i]));
 
@@ -175,12 +177,12 @@ namespace CVFont {
   void draw(const CVFontDef &font_def, const LINE_PROC &line_proc, const CURVE_PROC &curve_proc) {
     for (const auto &shape : font_def.shapes()) {
       if      (shape->type() == CVFontShape::Type::LINE) {
-        const CVFontLine *line = shape;
+        const CVFontLine *line = static_cast<const CVFontLine *>(shape);
 
         line_proc(line->start().x, line->start().y, line->end().x, line->end().y);
       }
       else if (shape->type() == CVFontShape::Type::CURVE) {
-        const CVFontCurve *curve = shape;
+        const CVFontCurve *curve = static_cast<CVFontCurve *>(shape);
 
         curve_proc(curve->p1().x, curve->p1().y, curve->p2().x, curve->p2().y,
                    curve->p3().x, curve->p3().y, curve->p4().x, curve->p4().y);
