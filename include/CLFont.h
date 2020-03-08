@@ -45,7 +45,14 @@ class CLFontDef {
 
  ~CLFontDef();
 
-  const Lines lines() const { return lines_; }
+  char c() const { return c_; }
+
+  double width() const { return width_; }
+
+  double ascender () const { return ascender_; }
+  double descender() const { return descender_; }
+
+  const Lines &lines() const { return lines_; }
 
   int addLine(const CPoint2D &p1, const CPoint2D &p2);
 
