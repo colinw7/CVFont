@@ -16,6 +16,7 @@
 #include <QPainterPath>
 
 class Application;
+class CFile;
 
 class Canvas : public QWidget {
   Q_OBJECT

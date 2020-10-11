@@ -1,4 +1,6 @@
 #include <CQVFontEd.h>
+#include <CFile.h>
+
 #include <QStatusBar>
 #include <QLabel>
 
