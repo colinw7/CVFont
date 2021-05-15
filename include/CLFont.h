@@ -10,10 +10,6 @@ class CLFontLine {
    start_(start), end_(end) {
   }
 
-  CLFontLine(const CLFontLine &line) :
-   start_(line.start_), end_(line.end_) {
-  }
-
   const CPoint2D &start() const { return start_; }
   const CPoint2D &end  () const { return end_  ; }
 
