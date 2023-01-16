@@ -58,7 +58,7 @@ addLine(const CPoint2D &p1, const CPoint2D &p2)
 
   shapes_.push_back(new CVFontLine(sp1, sp2));
 
-  return shapes_.size() - 1;
+  return int(shapes_.size() - 1);
 }
 
 int
@@ -72,31 +72,31 @@ addCurve(const CPoint2D &p1, const CPoint2D &p2, const CPoint2D &p3, const CPoin
 
   shapes_.push_back(new CVFontCurve(sp1, sp2, sp3, sp4));
 
-  return shapes_.size() - 1;
+  return int(shapes_.size() - 1);
 }
 
 const CVFontShape &
 CVFontDef::
 getShape(int i) const
 {
-  return *shapes_[i];
+  return *shapes_[uint(i)];
 }
 
 void
 CVFontDef::
 setShape(int i, const CVFontShape &shape)
 {
-  *shapes_[i] = shape;
+  *shapes_[uint(i)] = shape;
 }
 
 void
 CVFontDef::
 deleteShape(int i)
 {
-  delete shapes_[i];
+  delete shapes_[uint(i)];
 
   for (int j = i + 1; j < int(shapes_.size()); ++j)
-    shapes_[j - 1] = shapes_[j];
+    shapes_[uint(j - 1)] = shapes_[uint(j)];
 
   shapes_.pop_back();
 }

@@ -43,11 +43,11 @@ class CVFontLine : public CVFontShape {
   void setStart(const CPoint2D &p) { start_= p; }
   void setEnd  (const CPoint2D &p) { end_  = p; }
 
-  int startXInd() const { return std::round(start().x*16); }
-  int startYInd() const { return std::round(start().y*16); }
+  int startXInd() const { return int(std::round(start().x*16)); }
+  int startYInd() const { return int(std::round(start().y*16)); }
 
-  int endXInd() const { return std::round(end().x*16); }
-  int endYInd() const { return std::round(end().y*16); }
+  int endXInd() const { return int(std::round(end().x*16)); }
+  int endYInd() const { return int(std::round(end().y*16)); }
 
  private:
   CVFontLine &operator=(const CVFontLine &line);
@@ -79,17 +79,17 @@ class CVFontCurve : public CVFontShape {
   void setP3(const CPoint2D &p) { p3_ = p; }
   void setP4(const CPoint2D &p) { p4_ = p; }
 
-  int p1XInd() const { return std::round(p1().x*16); }
-  int p1YInd() const { return std::round(p1().y*16); }
+  int p1XInd() const { return int(std::round(p1().x*16)); }
+  int p1YInd() const { return int(std::round(p1().y*16)); }
 
-  int p2XInd() const { return std::round(p2().x*16); }
-  int p2YInd() const { return std::round(p2().y*16); }
+  int p2XInd() const { return int(std::round(p2().x*16)); }
+  int p2YInd() const { return int(std::round(p2().y*16)); }
 
-  int p3XInd() const { return std::round(p3().x*16); }
-  int p3YInd() const { return std::round(p3().y*16); }
+  int p3XInd() const { return int(std::round(p3().x*16)); }
+  int p3YInd() const { return int(std::round(p3().y*16)); }
 
-  int p4XInd() const { return std::round(p4().x*16); }
-  int p4YInd() const { return std::round(p4().y*16); }
+  int p4XInd() const { return int(std::round(p4().x*16)); }
+  int p4YInd() const { return int(std::round(p4().y*16)); }
 
  private:
   CVFontCurve &operator=(const CVFontCurve &curve);

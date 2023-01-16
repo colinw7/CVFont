@@ -1,4 +1,5 @@
 #include <CQLFontEd.h>
+#include <CQUtilGeom.h>
 #include <CFile.h>
 
 #include <QStatusBar>
@@ -753,7 +754,7 @@ paintEvent(QPaintEvent *)
 
   painter.fillRect(rect(), QBrush(QColor(0,0,0)));
 
-  painter.setWorldMatrix(CQUtil::toQMatrix(range_.getMatrix()));
+  painter.setWorldTransform(CQUtil::toQTransform(range_.getMatrix()));
 
   app_->draw(&painter);
 }
@@ -849,7 +850,7 @@ paintEvent(QPaintEvent *)
 
   painter.fillRect(rect(), QBrush(QColor(0,0,0)));
 
-  painter.setWorldMatrix(CQUtil::toQMatrix(range_.getMatrix()));
+  painter.setWorldTransform(CQUtil::toQTransform(range_.getMatrix()));
 
   double y  = 20;
   double dy = CLFont::charHeight;

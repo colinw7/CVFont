@@ -16,11 +16,11 @@ class CLFontLine {
   void setStart(const CPoint2D &p) { start_= p; }
   void setEnd  (const CPoint2D &p) { end_  = p; }
 
-  int startXInd() const { return std::round(start().x*16); }
-  int startYInd() const { return std::round(start().y*16); }
+  int startXInd() const { return int(std::round(start().x*16)); }
+  int startYInd() const { return int(std::round(start().y*16)); }
 
-  int endXInd() const { return std::round(end().x*16); }
-  int endYInd() const { return std::round(end().y*16); }
+  int endXInd() const { return int(std::round(end().x*16)); }
+  int endYInd() const { return int(std::round(end().y*16)); }
 
  private:
   CPoint2D start_;

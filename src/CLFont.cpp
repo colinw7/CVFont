@@ -26,31 +26,31 @@ addLine(const CPoint2D &p1, const CPoint2D &p2)
 
   lines_.push_back(new CLFontLine(sp1, sp2));
 
-  return lines_.size() - 1;
+  return int(lines_.size() - 1);
 }
 
 const CLFontLine &
 CLFontDef::
 getLine(int i) const
 {
-  return *lines_[i];
+  return *lines_[uint(i)];
 }
 
 void
 CLFontDef::
 setLine(int i, const CLFontLine &line)
 {
-  *lines_[i] = line;
+  *lines_[uint(i)] = line;
 }
 
 void
 CLFontDef::
 deleteLine(int i)
 {
-  delete lines_[i];
+  delete lines_[uint(i)];
 
   for (int j = i + 1; j < int(lines_.size()); ++j)
-    lines_[j - 1] = lines_[j];
+    lines_[uint(j - 1)] = lines_[uint(j)];
 
   lines_.pop_back();
 }

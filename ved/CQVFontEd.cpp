@@ -1,4 +1,5 @@
 #include <CQVFontEd.h>
+#include <CQUtilGeom.h>
 #include <CFile.h>
 
 #include <QStatusBar>
@@ -258,7 +259,7 @@ draw(QPainter *painter)
   painter->drawLine(QPointF(x2, y3), QPointF(x1, y3));
   painter->drawLine(QPointF(x1, y3), QPointF(x1, y1));
 
-  pen.setColor(QColor(40,40,40));
+  pen.setColor(QColor(40, 40, 40));
 
   painter->setPen(pen);
 
@@ -547,7 +548,7 @@ drawLabel(QPainter *painter, const QPointF &p, const QString &text, const QColor
 
   QFontMetrics fm(painter->font());
 
-  int tw = fm.width(text);
+  int tw = fm.horizontalAdvance(text);
   int th = fm.height();
 
   CPoint2D px;
@@ -1058,9 +1059,9 @@ paintEvent(QPaintEvent *)
 
   painter.setRenderHints(QPainter::Antialiasing);
 
-  painter.fillRect(rect(), QBrush(QColor(0,0,0)));
+  painter.fillRect(rect(), QBrush(QColor(0, 0, 0)));
 
-  painter.setWorldMatrix(CQUtil::toQMatrix(range_.getMatrix()));
+  painter.setWorldTransform(CQUtil::toQTransform(range_.getMatrix()));
 
   app_->draw(&painter);
 }
@@ -1154,9 +1155,9 @@ paintEvent(QPaintEvent *)
 
   painter.setRenderHints(QPainter::Antialiasing);
 
-  painter.fillRect(rect(), QBrush(QColor(0,0,0)));
+  painter.fillRect(rect(), QBrush(QColor(0, 0, 0)));
 
-  painter.setWorldMatrix(CQUtil::toQMatrix(range_.getMatrix()));
+  painter.setWorldTransform(CQUtil::toQTransform(range_.getMatrix()));
 
   double y  = 20;
   double dy = CVFont::charHeight;

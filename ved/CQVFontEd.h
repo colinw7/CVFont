@@ -27,15 +27,15 @@ class Canvas : public QWidget {
   const CDisplayRange2D &range() const { return range_; }
 
  private:
-  void paintEvent(QPaintEvent *);
+  void paintEvent(QPaintEvent *) override;
 
-  void resizeEvent(QResizeEvent *);
+  void resizeEvent(QResizeEvent *) override;
 
-  void keyPressEvent(QKeyEvent *);
+  void keyPressEvent(QKeyEvent *) override;
 
-  void mousePressEvent(QMouseEvent *e);
-  void mouseMoveEvent(QMouseEvent *e);
-  void mouseReleaseEvent(QMouseEvent *e);
+  void mousePressEvent(QMouseEvent *e) override;
+  void mouseMoveEvent(QMouseEvent *e) override;
+  void mouseReleaseEvent(QMouseEvent *e) override;
 
  private:
   Application     *app_;
@@ -51,9 +51,9 @@ class Preview : public QWidget {
   Preview(Application *app, const std::string &name);
 
  private:
-  void paintEvent(QPaintEvent *);
+  void paintEvent(QPaintEvent *) override;
 
-  void resizeEvent(QResizeEvent *);
+  void resizeEvent(QResizeEvent *) override;
 
  private:
   Application     *app_;
@@ -122,11 +122,11 @@ class Application : public CQMainWindow {
   double lineWidth() const { return lineWidth_; }
   void setLineWidth(double r) { lineWidth_ = r; }
 
-  void createMenus();
+  void createMenus() override;
 
-  QWidget *createCentralWidget();
+  QWidget *createCentralWidget() override;
 
-  void createStatusBar();
+  void createStatusBar() override;
 
   void draw(QPainter *painter);
 
@@ -171,7 +171,7 @@ class Application : public CQMainWindow {
 
   void updateFontDef();
 
-  QSize sizeHint() const { return QSize(800, 800); }
+  QSize sizeHint() const override { return QSize(800, 800); }
 
  private slots:
   void print();
